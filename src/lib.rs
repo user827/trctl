@@ -821,9 +821,9 @@ mod tests {
                 3   100%     2.4G     2.4G   Unknown        0        0    0.8  Idle       dl//testing3.pdf\n\
              Sum:            7.1G                           0        0\n\
              Select [a/{n}/N]: Select [a/{n}/N]: Select [a/{n}/N]: Select [a/{n}/N]: -- erase: testing2.pdf\n\
-             [w] invalid digit found in string\n\
-             [w] Invalid id\n\
-             [w] Invalid id\n"
+             -w invalid digit found in string\n\
+             -w Invalid id\n\
+             -w Invalid id\n"
             );
         });
     }

@@ -369,7 +369,7 @@ impl<NV: NotifyView> Logger for Notifier<NV> {
                 } else if let Some(msg) = err.downcast_ref::<Multiple>() {
                     print_warn!(self, "{}", msg).context("log")
                 } else {
-                    self.do_log(format_args!("{:?}", &err), log::Level::Error, false)
+                    self.do_log(format_args!("{:#}", err), log::Level::Error, false)
                         .context("log")?;
                     self.notify_view
                         .notify(Urgency::Critical, "error", Some(&format!("{err:#}")))
@@ -634,7 +634,7 @@ impl<O: WriteColor> Logger for StdLog<O> {
                 } else if let Some(msg) = err.downcast_ref::<Multiple>() {
                     print_warn!(self, "{}", msg).context("log")
                 } else {
-                    print_error!(self, "{:?}", &err).context("log")
+                    print_error!(self, "{:#}", err).context("log")
                 }
             }
         }
@@ -653,21 +653,19 @@ impl<O: WriteColor> Logger for StdLog<O> {
                 self.out.flush()?;
             }
             log::Level::Warn => {
-                write!(self.err, "{:indent$}", "[", indent = self.indent)?;
                 self.err
                     .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-                write!(self.err, "w")?;
+                write!(self.err, "-w ")?;
                 self.err.reset()?;
-                writeln!(self.err, "] {args}")?;
+                writeln!(self.err, "{args}")?;
                 self.err.flush()?;
             }
             log::Level::Error => {
-                write!(self.err, "{:indent$}", "[", indent = self.indent)?;
                 self.err
                     .set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-                write!(self.err, "e")?;
+                write!(self.err, "-e ")?;
                 self.err.reset()?;
-                writeln!(self.err, "] {args}")?;
+                writeln!(self.err, "{args}")?;
                 self.err.flush()?;
             }
             _ => panic!("todo"),
