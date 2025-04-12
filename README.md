@@ -19,10 +19,6 @@ A transmission daemon torrent client
   does not stop the torrent, avoids overwriting files with the same name, avoids
   filling the destination disk space and uses nicer IO.
 
-# Dependencies
-
-- shlib can be found [here](https://github.com/user827/shlib)
-
 # Installing
 
 - Copy aur/PKGBUILD to project root, modify it as need and run `makepkg`
