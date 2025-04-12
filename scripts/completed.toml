@@ -1,4 +1,4 @@
-mailuser= "none"
+mailuser = "none"
 rpc_url = "http://127.0.0.1:9091/transmission/rpc"
 rpc_user = "none"
 rpc_pass = "none"
@@ -13,5 +13,5 @@ ask_existing = true
 copydir = "none"
 quota_per_dldir = "100 GiB"
 free_space_per_dldir = "100 GiB"
-free_space_to_leave = "40 GiB"
+dst_free_space_to_leave = "40 GiB"
 color = "none"
