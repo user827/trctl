@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Name=trmv
+Comment=Queue torrent with a magnet link
+Exec=trmv add-url %u
+Icon=folder-open
+Terminal=false
+Type=Application
+Categories=Network;FileTransfer;P2P;
+NoDisplay=true
+MimeType=x-scheme-handler/magnet;

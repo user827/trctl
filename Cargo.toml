@@ -1,0 +1,65 @@
+[package]
+name = "trctl"
+description = "A transmission daemon CLI"
+repository = "https://github.com/user827/trctl"
+version = "2.7.5"
+authors = ["user827"]
+keywords = ["torrent", "transmission", "cli"]
+edition = "2021"
+license = "Apache-2.0"
+readme = "README.md"
+exclude = [
+  "/.gitignore",
+]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+faccess = { version = "0.2.3" }
+transmission-rpc = { version = "0.4.3" }
+tokio = { version = "1.15" }
+clap = { version = "4", features = ["derive", "cargo"]}
+clap_complete = "4"
+serde = { version = "1.0.132" }
+serde_json = { version = "1.0" }
+confy = { version = "0.6.1" }
+anyhow = { version = "1.0.52" }
+url = { version = "2.2.2", features = ["serde"] }
+base64 = { version = "0.22" }
+# mockall = { version = "*" }
+bendy = { version = "0.3.3" }
+sha-1 = { version = "0.10" }
+#env_logger = { version = "0" }
+log = { version = "0.4.14" }
+magnet-uri = { version = "0.2" }
+hex = { version = "0.4.3" }
+base32 = { version = "0.5" }
+lettre = { version = "0.11.10", features = ["sendmail-transport"] }
+hostname = "0.4.0"
+whoami = "1.2.1"
+regex = "1.5.4"
+native-dialog = "0.7"
+notify-rust = { version = "4.5.5" }
+byte-unit = { version = "5.0", features = ["std", "serde", "byte"], default-features = false }
+toml = "0.8.19"
+termcolor = "1.4.1"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["tracing-log", "env-filter"] }
+rusqlite = { version = "0.32.1" }
+time = { version = "0.3.36", features = [ "formatting", "macros" ] }
+xdg = { version = "2.5.2", optional = true }
+
+[dev-dependencies]
+pretty_assertions = "1"
+
+[lib]
+# because so slow
+doctest = false
+
+[profile.release-lto]
+inherits = "release"
+lto = "fat"
+
+[features]
+default = ["sqlite"]
+sqlite = ["dep:xdg"]

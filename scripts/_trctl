@@ -1,0 +1,470 @@
+#compdef trctl
+
+autoload -U is-at-least
+_get_torrents() {
+  local ret=1
+  # TODO unless -- was given
+  case "${line[1]}" in
+    -*) ;;
+    *)
+      _cache_torrents=( ${(f)"$(trctl gen-torrents "${(kv)opt_args[@]}" "${line[@]}")"} ) || return 1
+      # TODO handle fuzzy match corrections?
+      if [[ "${line[@]}" == "" ]]; then
+        _describe -V2 "torrents" _cache_torrents && ret=$?
+      else
+        _describe "torrents" _cache_torrents && ret=$?
+      fi
+      ;;
+  esac
+  return $ret
+}
+
+_trctl_query() {
+  _arguments "${_arguments_options[@]}" : \
+  '--finished=[Match finished]:FINISHED:(true false)' \
+  '-s+[Sort the output]:SORT:(id name urate drate size)' \
+  '--sort=[Sort the output]:SORT:(id name urate drate size)' \
+  '*--ids=[Match ids]:IDS:_default' \
+  '*--hsh=[Match hashes]:HSH:_default' \
+  '*--trackers=[Match trackers]:TRACKERS:_default' \
+  '*--status=[Match status(es)]:STATUS:(downloading queued-to-download queued-to-seed queued-to-verify seeding stopped verifying)' \
+  '-u[Case sensitive search. Is also enabled with uppercase in the query]' \
+  '--use-case[Case sensitive search. Is also enabled with uppercase in the query]' \
+  '-e[Exact match on torrent or tracker name]' \
+  '--exact[Exact match on torrent or tracker name]' \
+  '--error[Match torrents with an error]' \
+  '--complete[Match completed]' \
+  '--incomplete[Match incomplete]' \
+  '--move-aborted[Match completed that are still in dldir]' \
+  '--moved[Match files not in dldir]' \
+  '--cleanable[Match moved and finished torrents]' \
+  '--files[Exact match on torrent name]' \
+  '-r[Print in reverse]' \
+  '--reverse[Print in reverse]' \
+  '-h[Print help]' \
+  '--help[Print help]' \
+  '*::strs -- Query names:_get_torrents' \
+  && ret=0
+}
+
+_trctl() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" : \
+'-c+[Configuration file]:CONFIG:_files' \
+'--config=[Configuration file]:CONFIG:_files' \
+'*-v[Sen verbosity]' \
+'*--verbose[Sen verbosity]' \
+'--mock[Run with a mock rpc client]' \
+'-y[Don'\''t ask for confirmation]' \
+'--yes[Don'\''t ask for confirmation]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'-V[Print version]' \
+'--version[Print version]' \
+":: :_trctl_commands" \
+"*::: :->trctl" \
+&& ret=0
+    case $state in
+    (trctl)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:trctl-command-$line[1]:"
+        case $line[1] in
+            (add)
+_arguments "${_arguments_options[@]}" : \
+'--dldir=[Download directory]:DLDIR:_files' \
+'--existing[Whether the torrent already has files in the dldir]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::path -- Path to the torrent file:_files' \
+&& ret=0
+;;
+(add-url)
+_arguments "${_arguments_options[@]}" : \
+'--dldir=[Download directory]:DLDIR:_files' \
+'--existing[Whether the torrent already has files in the dldir]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::url -- Url to a torrent file or a magnet link:_default' \
+&& ret=0
+;;
+(q|qu|que|quer|query|rm|erase|clean|start|stop|start-now|verify|reannounce|list-trackers)
+  _trctl_query
+;;
+(set-location)
+_arguments "${_arguments_options[@]}" : \
+'--finished=[Match finished]:FINISHED:(true false)' \
+'-s+[Sort the output]:SORT:(id name urate drate size)' \
+'--sort=[Sort the output]:SORT:(id name urate drate size)' \
+'*--ids=[Match ids]:IDS:_default' \
+'*--hsh=[Match hashes]:HSH:_default' \
+'*--trackers=[Match trackers]:TRACKERS:_default' \
+'*--status=[Match status(es)]:STATUS:(downloading queued-to-download queued-to-seed queued-to-verify seeding stopped verifying)' \
+'--location=[New location]:LOCATION:_files' \
+'-u[Case sensitive search. Is also enabled with uppercase in the query]' \
+'--use-case[Case sensitive search. Is also enabled with uppercase in the query]' \
+'-e[Exact match on torrent or tracker name]' \
+'--exact[Exact match on torrent or tracker name]' \
+'--error[Match torrents with an error]' \
+'--complete[Match completed]' \
+'--incomplete[Match incomplete]' \
+'--move-aborted[Match completed that are still in dldir]' \
+'--moved[Match files not in dldir]' \
+'--cleanable[Match moved and finished torrents]' \
+'--files[Exact match on torrent name]' \
+'-r[Print in reverse]' \
+'--reverse[Print in reverse]' \
+'--mv[Move files (or find them in a new location)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::strs -- Query names:_get_torrents' \
+&& ret=0
+;;
+(mv)
+_arguments "${_arguments_options[@]}" : \
+'--finished=[Match finished]:FINISHED:(true false)' \
+'-s+[Sort the output]:SORT:(id name urate drate size)' \
+'--sort=[Sort the output]:SORT:(id name urate drate size)' \
+'*--ids=[Match ids]:IDS:_default' \
+'*--hsh=[Match hashes]:HSH:_default' \
+'*--trackers=[Match trackers]:TRACKERS:_default' \
+'*--status=[Match status(es)]:STATUS:(downloading queued-to-download queued-to-seed queued-to-verify seeding stopped verifying)' \
+'-d+[Destination directory]:DESTINATION:_files' \
+'--destination=[Destination directory]:DESTINATION:_files' \
+'--verify=[Verify the files after move]:VERIFY:(true false)' \
+'-u[Case sensitive search. Is also enabled with uppercase in the query]' \
+'--use-case[Case sensitive search. Is also enabled with uppercase in the query]' \
+'-e[Exact match on torrent or tracker name]' \
+'--exact[Exact match on torrent or tracker name]' \
+'--error[Match torrents with an error]' \
+'--complete[Match completed]' \
+'--incomplete[Match incomplete]' \
+'--move-aborted[Match completed that are still in dldir]' \
+'--moved[Match files not in dldir]' \
+'--cleanable[Match moved and finished torrents]' \
+'--files[Exact match on torrent name]' \
+'-r[Print in reverse]' \
+'--reverse[Print in reverse]' \
+'-f[Move even if the destination directory is low on disk space]' \
+'--force[Move even if the destination directory is low on disk space]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::strs -- Query names:_get_torrents' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_trctl__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:trctl-help-command-$line[1]:"
+        case $line[1] in
+            (add)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(add-url)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(query)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(rm)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(erase)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(clean)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(gen-completions)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(gen-torrents)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(set-location)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(mv)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(start)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(stop)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(start-now)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(verify)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(reannounce)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(list-trackers)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+}
+
+(( $+functions[_trctl_commands] )) ||
+_trctl_commands() {
+    local commands; commands=(
+'add:Add torrent file' \
+'add-url:Add magnet link or a torrent file from url' \
+'query:Query torrents' \
+'rm:Remove torrent and its data' \
+'erase:Remove torrent but leave downloaded data in place' \
+'clean:Clean finished torrents' \
+'gen-completions:' \
+'gen-torrents:' \
+'set-location:Move torrents with the transmission rpc call' \
+'mv:Move torrents' \
+'start:Queue torrents' \
+'stop:Stop torrents' \
+'start-now:Start torrents without queuing' \
+'verify:Verify torrents' \
+'reannounce:Reannounce torrents' \
+'list-trackers:List all trackers used by the torrents' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'trctl commands' commands "$@"
+}
+(( $+functions[_trctl__add_commands] )) ||
+_trctl__add_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl add commands' commands "$@"
+}
+(( $+functions[_trctl__add-url_commands] )) ||
+_trctl__add-url_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl add-url commands' commands "$@"
+}
+(( $+functions[_trctl__clean_commands] )) ||
+_trctl__clean_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl clean commands' commands "$@"
+}
+(( $+functions[_trctl__erase_commands] )) ||
+_trctl__erase_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl erase commands' commands "$@"
+}
+(( $+functions[_trctl__gen-completions_commands] )) ||
+_trctl__gen-completions_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl gen-completions commands' commands "$@"
+}
+(( $+functions[_trctl__gen-torrents_commands] )) ||
+_trctl__gen-torrents_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl gen-torrents commands' commands "$@"
+}
+(( $+functions[_trctl__help_commands] )) ||
+_trctl__help_commands() {
+    local commands; commands=(
+'add:Add torrent file' \
+'add-url:Add magnet link or a torrent file from url' \
+'query:Query torrents' \
+'rm:Remove torrent and its data' \
+'erase:Remove torrent but leave downloaded data in place' \
+'clean:Clean finished torrents' \
+'gen-completions:' \
+'gen-torrents:' \
+'set-location:Move torrents with the transmission rpc call' \
+'mv:Move torrents' \
+'start:Queue torrents' \
+'stop:Stop torrents' \
+'start-now:Start torrents without queuing' \
+'verify:Verify torrents' \
+'reannounce:Reannounce torrents' \
+'list-trackers:List all trackers used by the torrents' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'trctl help commands' commands "$@"
+}
+(( $+functions[_trctl__help__add_commands] )) ||
+_trctl__help__add_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help add commands' commands "$@"
+}
+(( $+functions[_trctl__help__add-url_commands] )) ||
+_trctl__help__add-url_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help add-url commands' commands "$@"
+}
+(( $+functions[_trctl__help__clean_commands] )) ||
+_trctl__help__clean_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help clean commands' commands "$@"
+}
+(( $+functions[_trctl__help__erase_commands] )) ||
+_trctl__help__erase_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help erase commands' commands "$@"
+}
+(( $+functions[_trctl__help__gen-completions_commands] )) ||
+_trctl__help__gen-completions_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help gen-completions commands' commands "$@"
+}
+(( $+functions[_trctl__help__gen-torrents_commands] )) ||
+_trctl__help__gen-torrents_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help gen-torrents commands' commands "$@"
+}
+(( $+functions[_trctl__help__help_commands] )) ||
+_trctl__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help help commands' commands "$@"
+}
+(( $+functions[_trctl__help__list-trackers_commands] )) ||
+_trctl__help__list-trackers_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help list-trackers commands' commands "$@"
+}
+(( $+functions[_trctl__help__mv_commands] )) ||
+_trctl__help__mv_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help mv commands' commands "$@"
+}
+(( $+functions[_trctl__help__query_commands] )) ||
+_trctl__help__query_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help query commands' commands "$@"
+}
+(( $+functions[_trctl__help__reannounce_commands] )) ||
+_trctl__help__reannounce_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help reannounce commands' commands "$@"
+}
+(( $+functions[_trctl__help__rm_commands] )) ||
+_trctl__help__rm_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help rm commands' commands "$@"
+}
+(( $+functions[_trctl__help__set-location_commands] )) ||
+_trctl__help__set-location_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help set-location commands' commands "$@"
+}
+(( $+functions[_trctl__help__start_commands] )) ||
+_trctl__help__start_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help start commands' commands "$@"
+}
+(( $+functions[_trctl__help__start-now_commands] )) ||
+_trctl__help__start-now_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help start-now commands' commands "$@"
+}
+(( $+functions[_trctl__help__stop_commands] )) ||
+_trctl__help__stop_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help stop commands' commands "$@"
+}
+(( $+functions[_trctl__help__verify_commands] )) ||
+_trctl__help__verify_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl help verify commands' commands "$@"
+}
+(( $+functions[_trctl__list-trackers_commands] )) ||
+_trctl__list-trackers_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl list-trackers commands' commands "$@"
+}
+(( $+functions[_trctl__mv_commands] )) ||
+_trctl__mv_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl mv commands' commands "$@"
+}
+(( $+functions[_trctl__query_commands] )) ||
+_trctl__query_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl query commands' commands "$@"
+}
+(( $+functions[_trctl__reannounce_commands] )) ||
+_trctl__reannounce_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl reannounce commands' commands "$@"
+}
+(( $+functions[_trctl__rm_commands] )) ||
+_trctl__rm_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl rm commands' commands "$@"
+}
+(( $+functions[_trctl__set-location_commands] )) ||
+_trctl__set-location_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl set-location commands' commands "$@"
+}
+(( $+functions[_trctl__start_commands] )) ||
+_trctl__start_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl start commands' commands "$@"
+}
+(( $+functions[_trctl__start-now_commands] )) ||
+_trctl__start-now_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl start-now commands' commands "$@"
+}
+(( $+functions[_trctl__stop_commands] )) ||
+_trctl__stop_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl stop commands' commands "$@"
+}
+(( $+functions[_trctl__verify_commands] )) ||
+_trctl__verify_commands() {
+    local commands; commands=()
+    _describe -t commands 'trctl verify commands' commands "$@"
+}
+
+if [ "$funcstack[1]" = "_trctl" ]; then
+    _trctl "$@"
+else
+    compdef _trctl trctl
+fi

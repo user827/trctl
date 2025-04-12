@@ -1,0 +1,16 @@
+post_install() {
+  # Let all users add torrents
+  #chgrp torrent /usr/bin/trmv
+  #chmod g+s /usr/bin/trmv
+  # breaks notifications
+  # allows to access others files
+  :
+}
+
+post_upgrade() {
+  post_install "$@"
+}
+
+post_remove() {
+  echo "group torrent not removed"
+}
