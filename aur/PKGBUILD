@@ -6,7 +6,6 @@ pkgrel=1
 arch=('any')
 source=("$pkgname::git+file://$PWD?signed")
 md5sums=(SKIP)
-install=$pkgname.install
 optdepends=('s-nail')
 makedepends=('mold')
 backup=(
