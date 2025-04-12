@@ -28,7 +28,8 @@ copytorrent() {
   copydir=$torrentroot/torrents
 
   if [ ! -f "$copydir"/"$hsh".torrent ]; then
-    # Don't fail
+    # Don't fail in case we aren't transmission user and don't have permission to transmission's private
+    # folder
     cp --no-preserve=mode -- "$torrent_file" "$copydir"/"$hsh".torrent.tmp || return 0
     # http://blog.httrack.com/blog/2013/11/15/everything-you-always-wanted-to-know-about-fsync/
     # have to sync both the fila and its directory entry
@@ -37,16 +38,6 @@ copytorrent() {
     sync -- "$copydir"
   fi
 }
-
-
-trap checkstatus 0
-
-verify=0
-
-# some of these needs to be able to cd to current dir
-cd /
-
-
 
 
 cfgpath=$TR_CONFIG_PATH
@@ -63,14 +54,11 @@ force=$TR_FORCE
 verify=$TR_VERIFY
 
 
-
-#if [ "$(id -un)" != "@USER@" ]; then
-#  error "uid not for @USER@"
-#fi
-
-
+trap checkstatus 0
+# some of these needs to be able to cd to current dir
+cd /
 umask 007
-# no permission when resuming other wise... but might not have finished
+# no permission when resuming otherwise... but might not have finished
 copytorrent
 
 
@@ -80,14 +68,14 @@ exec 8>"$srclockfile"
 if ! flock 8; then
   error "cannot acquire srclock for ${srclockfile#"$torrentroot"} (${basepath#"$torrentroot"} $hsh ${destdir#"$torrentroot"})"
 fi
-# in case we call resumemove jsut when it would have been moved anyways
+# in case we were called again while a move was already in progress
 if [ ! -e "$basepath" ]; then
   error "already moved ${basepath#"$torrentroot"}"
 fi
 
 dstdevid=$(stat -c %d -- "$destdir")
 dstlockfile=$lockfiles/$dstdevid
-# only one move per destdir so that we can more correctly calculate freespace
+# only one concurrent move per destdir so that we can more correctly calculate freespace
 exec 9>"$dstlockfile"
 if ! flock 9; then
   error "cannot acquire dstlock for ${dstlockfile#"$torrentroot"} (${basepath#"$torrentroot"} $hsh ${destdir#"$torrentroot"})"
@@ -141,21 +129,18 @@ done
 # TODO
 if [ "$verify" = 1 ]; then
     for try in $(seq 3); do
-      log notice "verifying"
+      log notice "start verifying"
       ret=0
       # --verify does not wait for verification to finish
       #transmission-remote "127.0.0.1:@RPCPORT@" -N /etc/"@NAME@"/netrc -t "$hsh" --verify >/dev/null || ret=$?
       trctl --config "$cfgpath" --yes verify --hsh "$hsh" >/dev/null || ret=$?
       [ $ret != 0 ] || break
       if [ "$try" == 3 ]; then
-        error "verify timeout"
+        error "verify start timeout"
       fi
     done
 fi
 
-# before removing as the file is not closed (cannot be closed?)
-# don't error on error (eg. rtorrent closing or something else)
-#"/usr/lib/rtorrentd"/xmlrpcscgi.py "$url" my.moved "$hsh" "$destdir" > /dev/null
 rm --interactive=never -r -- "$basepath"
 if [ "${basedir##*/}" = "$hsh" ]; then
   rmdir -- "$basedir"
@@ -165,6 +150,3 @@ else
 fi
 
 rm -- "$origdestdir/$hsh.incomplete"
-
-# might be locked!
-#rm "$lockfile"
