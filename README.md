@@ -25,7 +25,8 @@ A transmission daemon torrent client
 
 # Setup
 
-Transmission daemon and the client used should use the `torrent` group created.
+- Configuration file is created in `~/.config/trctl`
+- Transmission daemon and the client used should use the `torrent` group created.
 
 # Developing
 
