@@ -1,14 +1,20 @@
 # Maintainer: me
 
 pkgname=trctl
-pkgver=2.7.5
+pkgdesc="A transmission daemon CLI"
+url="https://github.com/user827/trctl.git"
+pkgver=2.7.7
 pkgrel=1
 arch=('any')
+license=('Apache')
 source=("$pkgname::git+file://$PWD?signed")
-md5sums=(SKIP)
 depends=('shlib')
 optdepends=('s-nail')
 makedepends=('mold')
+sha256sums=(SKIP)
+validpgpkeys=(D47AF080A89B17BA083053B68DFE60B7327D52D6) # user827
+options=(strip)
+
 backup=(
 "etc/$pkgname/completed.toml"
 )
