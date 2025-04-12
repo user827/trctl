@@ -4,7 +4,7 @@ set -eu
 PATH=/usr/bin
 cfgpath=/etc/trctl/completed.toml
 
-. /usr/lib/shlib/logs2.sh
+. /usr/lib/trctl/logging.sh
 
 name=$TR_TORRENT_NAME
 hsh=$TR_TORRENT_HASH
@@ -44,7 +44,7 @@ logged=0
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --systemd)
-      shlib_systemd=1
+      export shlib_systemd=1
       ;;
     --logged)
       logged=1

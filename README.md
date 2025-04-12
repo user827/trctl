@@ -31,6 +31,7 @@ A transmission daemon torrent client
 
 - Configuration file is created in `~/.config/trctl` for the cli and in
   `/etc/trctl/completed.toml` for the torrent completion script.
+- Configure transmission to user the provided completion script `/usr/lib/trctl/completed.sh`
 - Transmission daemon and the client used should use the `torrent` group created.
 
 # Developing
