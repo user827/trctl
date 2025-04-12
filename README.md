@@ -1,3 +1,7 @@
+# trctl
+[![AUR version](https://img.shields.io/aur/version/trctl)](https://aur.archlinux.org/packages/trctl/)
+[![Crate](https://img.shields.io/crates/v/trctl.svg)](https://crates.io/crates/trctl)
+
 A transmission daemon torrent client
 
 * Fast way to command common torrent actions such as querying/filtering, adding,
@@ -19,25 +23,25 @@ A transmission daemon torrent client
   does not stop the torrent, avoids overwriting files with the same name, avoids
   filling the destination disk space and uses nicer IO.
 
-# Installing
+## Installing
 
 - Copy aur/PKGBUILD to project root, modify it as need and run `makepkg`
 
-# Setup
+## Setup
 
 - Configuration file is created in `~/.config/trctl` for the cli and in
   `/etc/trctl/completed.toml` for the torrent completion script.
 - Configure transmission to user the provided completion script `/usr/lib/trctl/completed.sh`
 - Transmission daemon and the client used should use the `torrent` group created.
 
-# Developing
+## Developing
 
 Generate completion file with:
 ```
 trctl gen-completions zsh > _trctl
 ```
 
-# Similar projects
+## Similar projects
 
 * [Stig](https://github.com/rndusr/stig) provides both a text user interface and
   a command line interface. Is much more featureful than mine :D. Maybe it's not
@@ -47,6 +51,6 @@ trctl gen-completions zsh > _trctl
   provide a command line interface however. I use it when I need to do see more
   information about the torrent or apply some more esoteric actions.
 
-# Attributes
+## Attributes
 
 * [Bit torrent icons created by Rahat - Flaticon](https://www.flaticon.com/free-icons/bit-torrent)
