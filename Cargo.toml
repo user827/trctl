@@ -2,14 +2,15 @@
 name = "trctl"
 description = "A transmission daemon CLI"
 repository = "https://github.com/user827/trctl"
-version = "2.7.6"
-authors = ["user827"]
-keywords = ["torrent", "transmission", "cli"]
-edition = "2021"
 license = "Apache-2.0"
+keywords = ["torrent", "transmission", "cli"]
+version = "2.7.7"
+edition = "2021"
+authors = ["user827"]
 readme = "README.md"
 exclude = [
   "/.gitignore",
+  "/RELEASE-CHECKLIST.md"
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
