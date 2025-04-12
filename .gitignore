@@ -1,6 +1,3 @@
 /PKGBUILD
-depr.rs
-/rusty-tags.vi
 /target/
-gutentags
 /*.tar.*
