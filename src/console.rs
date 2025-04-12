@@ -570,7 +570,7 @@ impl<O: WriteColor, I: ReadLine> View for Console<O, I> {
                 print_info!(&mut self.log, "Started immediately:")?;
             }
             Action::TorrentAction(TorrentAction::Verify) => {
-                print_info!(&mut self.log, "Verifying:")?
+                print_info!(&mut self.log, "Verifying:")?;
             }
             Action::TorrentAction(TorrentAction::Stop) => print_info!(&mut self.log, "Stopped:")?,
             Action::SetLocation { moved: false } => print_info!(&mut self.log, "Location set")?,

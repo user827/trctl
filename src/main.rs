@@ -216,10 +216,7 @@ fn run<C: TorrentCli>(
                 .action(&args, TorrentAction::Reannounce),
             CliSub::GenTorrents(mut args) => {
                 //println!("{:?}", args.strs);
-                let mut client = match builder.new_client() {
-                    Ok(client) => client,
-                    Err(err) => return Err(err),
-                };
+                let mut client = builder.new_client()?;
                 // to allow match the latest one easily
                 args.reverse = true;
                 args.sort = Some(Sort::Id);

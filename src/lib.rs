@@ -81,7 +81,7 @@ impl<C: TorrentCli, V: View> Trmv<C, V> {
                 download_dir = PathBuf::from(&self.base_dir);
                 download_dir.push(d);
             }
-        };
+        }
         let f = self
             .client
             .free_space(download_dir.to_string_lossy().to_string())
@@ -117,8 +117,7 @@ impl<C: TorrentCli, V: View> Trmv<C, V> {
                             .enumerate()
                         {
                             let wanted = wanted_array[i];
-                            assert!(wanted == 1 || wanted == 0);
-                            if wanted == 1 || file.bytes_completed > 0 {
+                            if wanted || file.bytes_completed > 0 {
                                 size_when_done += file.length;
                             }
                         }
@@ -133,7 +132,7 @@ impl<C: TorrentCli, V: View> Trmv<C, V> {
                     )?;
                 } else {
                     total_size += final_size;
-                };
+                }
 
                 if left_until_done < 0 {
                     print_warn!(
@@ -143,8 +142,8 @@ impl<C: TorrentCli, V: View> Trmv<C, V> {
                     )?;
                 } else {
                     safe_space -= left_until_done;
-                };
-            };
+                }
+            }
         }
 
         print_info!(
