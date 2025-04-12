@@ -8,10 +8,10 @@ use crate::db::DBSqlite;
 use crate::errors::*;
 use crate::{Trctl, Trmv};
 use byte_unit::Byte;
-use serde::{Deserialize, Serialize, Deserializer, Serializer};
-use toml::Value;
-use termcolor::WriteColor;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::path::{Path, PathBuf};
+use termcolor::WriteColor;
+use toml::Value;
 use transmission_rpc::types::BasicAuth;
 use transmission_rpc::TransClient;
 use url::Url;
@@ -124,7 +124,11 @@ impl Config {
         self.builder_with(Builder::default_client, name.to_string())
     }
 
-    pub fn builder_with<C: TorrentCli>(self, fclient: fn(&Builder<C>) -> Result<C>, name: String) -> Builder<C> {
+    pub fn builder_with<C: TorrentCli>(
+        self,
+        fclient: fn(&Builder<C>) -> Result<C>,
+        name: String,
+    ) -> Builder<C> {
         Builder {
             cfg: self,
             fclient,
@@ -255,7 +259,7 @@ impl<C: TorrentCli> Builder<C> {
         let host = url.host_str();
         if let Some(h) = host {
             if h.starts_with("127.") || h == "localhost" || h == "::1" {
-                return false
+                return false;
             }
         }
         true
@@ -304,10 +308,7 @@ impl<C: TorrentCli> Builder<C> {
 
     /// # Panics
     /// does not
-    pub fn new_trmv(
-        self,
-        log: DefLog
-    ) -> Result<Trmv< C, DefCon>> {
+    pub fn new_trmv(self, log: DefLog) -> Result<Trmv<C, DefCon>> {
         let v = Console {
             log,
             base_dir: self.cfg.base_dir.clone(),
@@ -319,7 +320,11 @@ impl<C: TorrentCli> Builder<C> {
 
     pub fn new_trmv_view<V: View>(self, view: V) -> std::result::Result<Trmv<C, V>, Error> {
         #[cfg(feature = "sqlite")]
-        let db = DBSqlite::new(if self.cfg.sqlitedb { Some(self.sqlitedbpath()?) } else { None } );
+        let db = DBSqlite::new(if self.cfg.sqlitedb {
+            Some(self.sqlitedbpath()?)
+        } else {
+            None
+        });
         Ok(Trmv {
             client: self.new_client()?,
             view,

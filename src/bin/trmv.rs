@@ -4,11 +4,11 @@ use trctl::client::SyncRequest;
 use trctl::config::{Builder, Config};
 use trctl::console::Logger;
 //use trctl::console::Unprivileged;
+use tracing::{event, span, Level};
 use trctl::errors::*;
 use trctl::AddArgs;
 use trctl::TorrentLoc;
 use url::Url;
-use tracing::{span, event, Level};
 
 const NAME: &str = "trmv";
 const CONFIG_NAME: &str = env!("CARGO_PKG_NAME");

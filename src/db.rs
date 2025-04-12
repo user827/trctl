@@ -14,10 +14,7 @@ pub struct DBSqlite {
 impl DBSqlite {
     #[must_use]
     pub fn new(path: Option<PathBuf>) -> Self {
-        Self {
-            conn: None,
-            path,
-        }
+        Self { conn: None, path }
     }
 
     fn init(&mut self) -> Result<&mut Connection> {
@@ -31,7 +28,7 @@ impl DBSqlite {
         let mut statement = conn.prepare(
             "
             SELECT name FROM sqlite_master WHERE type='table' AND name='torrents';
-            "
+            ",
         )?;
         if statement.query([])?.next()?.is_none() {
             Self::create_tables(&conn)?;
@@ -47,7 +44,7 @@ impl DBSqlite {
         let query = "
         CREATE TABLE torrents (hash TEXT PRIMARY KEY, timestamp BIGINT);
         ";
-        conn.execute(query,[])?;
+        conn.execute(query, [])?;
         Ok(())
     }
 }
@@ -61,13 +58,15 @@ impl DB for DBSqlite {
     fn store(&mut self, hsh: &str) -> Result<()> {
         if self.path.is_none() {
             debug!("not enabled");
-            return Ok(())
+            return Ok(());
         }
         let conn = self.init()?;
-        let timestamp = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?.as_secs();
+        let timestamp = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)?
+            .as_secs();
         conn.execute(
             "INSERT OR IGNORE INTO torrents (hash, timestamp) VALUES (?1, ?2);",
-            (hsh, timestamp)
+            (hsh, timestamp),
         )?;
         Ok(())
     }
@@ -75,14 +74,14 @@ impl DB for DBSqlite {
     fn has(&mut self, hsh: &str) -> Result<Option<u64>> {
         if self.path.is_none() {
             debug!("not enabled");
-            return Ok(None)
+            return Ok(None);
         }
         let conn = self.init()?;
 
         let mut statement = conn.prepare(
             "
             SELECT timestamp FROM torrents WHERE hash = ?1;
-            "
+            ",
         )?;
         if let Some(res) = statement.query([hsh])?.next()? {
             return Ok(res.get(0)?);

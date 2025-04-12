@@ -3,12 +3,10 @@
 
 mod escape;
 
-use std::io::{self, Write};
 use std::ffi::OsStr;
+use std::io::{self, Write};
 // TODO querycmd out of lib
-use clap::{
-    arg, command, value_parser, Args, Command, FromArgMatches as _, Parser, Subcommand
-};
+use clap::{arg, command, value_parser, Args, Command, FromArgMatches as _, Parser, Subcommand};
 use clap_complete::{generate, Shell};
 use std::path::PathBuf;
 use url::Url;
@@ -118,7 +116,12 @@ pub enum CliSub {
 }
 
 #[allow(clippy::too_many_lines)]
-fn run<C: TorrentCli>(builder: Builder<C>, cli: Cli, opts: &CustomOpts, mut log: DefLog) -> Result<()> {
+fn run<C: TorrentCli>(
+    builder: Builder<C>,
+    cli: Cli,
+    opts: &CustomOpts,
+    mut log: DefLog,
+) -> Result<()> {
     if let Some(cmd) = cli.cmd {
         match cmd {
             CliSub::Add {
@@ -192,7 +195,7 @@ fn run<C: TorrentCli>(builder: Builder<C>, cli: Cli, opts: &CustomOpts, mut log:
                 destination.as_ref(),
                 force,
                 verify,
-                &opts.config
+                &opts.config,
             ),
             CliSub::Query(args) => builder.new_trctl(log)?.query(&args),
             CliSub::ListTrackers(args) => builder.new_trctl(log)?.list_trackers(&args),
@@ -211,51 +214,51 @@ fn run<C: TorrentCli>(builder: Builder<C>, cli: Cli, opts: &CustomOpts, mut log:
             CliSub::Reannounce(args) => builder
                 .new_trctl(log)?
                 .action(&args, TorrentAction::Reannounce),
-                CliSub::GenTorrents(mut args) => {
-                    //println!("{:?}", args.strs);
-                    let mut client = match builder.new_client() {
-                        Ok(client) => client,
-                        Err(err) => return Err(err),
-                    };
-                    // to allow match the latest one easily
-                    args.reverse = true;
-                    args.sort = Some(Sort::Id);
-                    // TODO required fields
-                    let torrents = match client.torrent_query_sort(None, &args) {
-                        Ok(torrents) => torrents,
-                        Err(err) => {
-                            if let Some(NoMatches) = err.downcast_ref::<NoMatches>() {
-                                std::process::exit(1)
-                            }
-                            return Err(err);
+            CliSub::GenTorrents(mut args) => {
+                //println!("{:?}", args.strs);
+                let mut client = match builder.new_client() {
+                    Ok(client) => client,
+                    Err(err) => return Err(err),
+                };
+                // to allow match the latest one easily
+                args.reverse = true;
+                args.sort = Some(Sort::Id);
+                // TODO required fields
+                let torrents = match client.torrent_query_sort(None, &args) {
+                    Ok(torrents) => torrents,
+                    Err(err) => {
+                        if let Some(NoMatches) = err.downcast_ref::<NoMatches>() {
+                            std::process::exit(1)
                         }
-                    };
-                    for t in torrents {
-                        if let Some(ref name) = t.name {
-                            let dt = trctl::display::Torrent {
-                                torrent: &t,
-                                base_dir: &builder.cfg.base_dir,
-                            };
-                            let res = writeln!(
-                                log.out(),
-                                "{}:{:4} {}{} ({}%) {}/",
-                                escape::zsh(name),
-                                dt.id(),
-                                dt.downloaded_size(),
-                                dt.error_mark(),
-                                dt.percent_done(),
-                                dt.download_dir()
-                            );
-                            if let Err(err) = res {
-                                return Err(err.into());
-                            }
+                        return Err(err);
+                    }
+                };
+                for t in torrents {
+                    if let Some(ref name) = t.name {
+                        let dt = trctl::display::Torrent {
+                            torrent: &t,
+                            base_dir: &builder.cfg.base_dir,
+                        };
+                        let res = writeln!(
+                            log.out(),
+                            "{}:{:4} {}{} ({}%) {}/",
+                            escape::zsh(name),
+                            dt.id(),
+                            dt.downloaded_size(),
+                            dt.error_mark(),
+                            dt.percent_done(),
+                            dt.download_dir()
+                        );
+                        if let Err(err) = res {
+                            return Err(err.into());
                         }
                     }
-                    if let Err(err) = log.out().flush() {
-                        return Err(err.into());
-                    }
-                    Ok(())
                 }
+                if let Err(err) = log.out().flush() {
+                    return Err(err.into());
+                }
+                Ok(())
+            }
             CliSub::GenCompletions { .. } => {
                 bail!("should not happen");
             }
@@ -269,16 +272,17 @@ fn run<C: TorrentCli>(builder: Builder<C>, cli: Cli, opts: &CustomOpts, mut log:
 
 #[derive(Args)]
 struct CustomOpts {
-    config: PathBuf
+    config: PathBuf,
 }
 
 fn build_cli() -> Result<Command> {
     let parser = command!().version(env!("BUILD_FULL_VERSION"));
-    let default_cfgpath: &'static OsStr = Box::leak(Config::config_path(NAME)?.into_boxed_path()).as_os_str();
+    let default_cfgpath: &'static OsStr =
+        Box::leak(Config::config_path(NAME)?.into_boxed_path()).as_os_str();
     let parser = parser.arg(
         arg!(-c --config <CONFIG> "Configuration file")
-        .value_parser(value_parser!(PathBuf))
-        .default_value(default_cfgpath)
+            .value_parser(value_parser!(PathBuf))
+            .default_value(default_cfgpath),
     );
 
     Ok(Cli::augment_args(parser))

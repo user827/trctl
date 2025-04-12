@@ -19,6 +19,10 @@ A transmission daemon torrent client
   does not stop the torrent, avoids overwriting files with the same name, avoids
   filling the destination disk space and uses nicer IO.
 
+# Installing
+
+- Copy aur/PKGBUILD to project root, modify it as need and run `makepkg`
+
 # Setup
 
 Transmission daemon and the client used should use the `torrent` group created.

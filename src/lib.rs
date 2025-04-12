@@ -5,15 +5,14 @@
 pub mod client;
 pub mod config;
 pub mod console;
+#[cfg(feature = "sqlite")]
+pub mod db;
 pub mod display;
 pub mod errors;
 pub mod torrent;
-#[cfg(feature = "sqlite")]
-pub mod db;
 
 use base64::Engine as _;
 use db::DBSqlite;
-use termcolor::WriteColor;
 use std::borrow::Borrow;
 use std::convert::TryFrom as _;
 use std::io::Write;
@@ -21,20 +20,21 @@ use std::iter::Iterator;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::time::SystemTime;
+use termcolor::WriteColor;
 
 use display::ByteSize;
 use magnet_uri::MagnetURI;
 use torrent::Torrent as TorrentInfo;
+use tracing::{event, instrument, span, Level};
 use transmission_rpc::types::{Torrent, TorrentStatus};
 use url::Url;
-use tracing::{instrument, span, event, Level};
 
 use client::TorrentAction;
 use client::{Client, QueryCmd, TorrentAddArgs, TorrentAdded, TorrentCli, TorrentFilter};
 use console::{Action, ConfirmAction, Console, Logger, ReadLine, View};
-use errors::*;
 #[cfg(feature = "sqlite")]
 use db::DB;
+use errors::*;
 
 pub struct TorrentAddResult {
     pub response: TorrentAdded,
@@ -183,15 +183,15 @@ impl<C: TorrentCli, V: View> Trmv<C, V> {
         let mut existing = copydir.join(hsh);
         existing.set_extension("torrent");
         match existing.metadata() {
-            Err(error) => {
-                match error.kind() {
-                    std::io::ErrorKind::NotFound => Ok(None),
-                    _ => Err(anyhow!(error)).context("Copydir"),
-                }
-            }
-            Ok(meta) => {
-                Ok(Some(meta.modified()?.duration_since(SystemTime::UNIX_EPOCH)?.as_secs()))
-            }
+            Err(error) => match error.kind() {
+                std::io::ErrorKind::NotFound => Ok(None),
+                _ => Err(anyhow!(error)).context("Copydir"),
+            },
+            Ok(meta) => Ok(Some(
+                meta.modified()?
+                    .duration_since(SystemTime::UNIX_EPOCH)?
+                    .as_secs(),
+            )),
         }
     }
 
@@ -254,7 +254,8 @@ impl<C: TorrentCli, V: View> Trmv<C, V> {
                         anyhow!("Magnet urls without any info hash are not supported")
                     })?;
 
-                print_debug!(self.view.log(), "Magnet hsh before fixing: {}", &hsh_tmp).context("log")?;
+                print_debug!(self.view.log(), "Magnet hsh before fixing: {}", &hsh_tmp)
+                    .context("log")?;
 
                 let mut hsh_owned;
                 if hsh_tmp.len() != 40 {
@@ -269,7 +270,7 @@ impl<C: TorrentCli, V: View> Trmv<C, V> {
                 if let Some(time) = exists {
                     if !self
                         .view
-                            .ask_existing(magnet.name().unwrap_or("magnet").as_bytes(), time)?
+                        .ask_existing(magnet.name().unwrap_or("magnet").as_bytes(), time)?
                     {
                         bail!(NothingToDo("Nothing to do"));
                     }
@@ -290,7 +291,7 @@ impl<C: TorrentCli, V: View> Trmv<C, V> {
                     would_be_left,
                     would_be_size,
                     exists,
-                    &hsh_owned
+                    &hsh_owned,
                 )?;
             }
         }
@@ -390,7 +391,8 @@ impl<T: TorrentCli, O: WriteColor, I: ReadLine> Trctl<T, Console<O, I>> {
                 .client
                 .torrent_query_sort(None, &qcmd)
                 .context("query")?;
-            let selected = Self::selectids(&mut self.console, &filtered, None, self.interactive).context("selectids")?;
+            let selected = Self::selectids(&mut self.console, &filtered, None, self.interactive)
+                .context("selectids")?;
             self.erase_selected(&selected, &filtered, delete_data)
                 .context("erase_selected")?;
         }
@@ -477,8 +479,12 @@ impl<T: TorrentCli, O: WriteColor, I: ReadLine> Trctl<T, Console<O, I>> {
                     let p = std::path::Path::new(d);
                     if p.file_name() == Some(std::ffi::OsStr::new(h)) {
                         if self.is_remote {
-                            print_info!(self.console.log(), "not removing the hash dir of a remote torrent {}", d)?;
-                            return Ok(())
+                            print_info!(
+                                self.console.log(),
+                                "not removing the hash dir of a remote torrent {}",
+                                d
+                            )?;
+                            return Ok(());
                         }
                         print_info!(self.console.log(), "rmdir {}", d)?;
                         std::fs::remove_dir(p).or_else(|e| {
@@ -599,7 +605,7 @@ impl<T: TorrentCli, O: WriteColor, I: ReadLine> Trctl<T, Console<O, I>> {
         destination: Option<&PathBuf>,
         force: bool,
         verify: Option<bool>,
-        config_path: &Path
+        config_path: &Path,
     ) -> Result<()> {
         if self.is_remote {
             bail!("Cannot mv files in a remote host");

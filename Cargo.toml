@@ -2,7 +2,7 @@
 name = "trctl"
 description = "A transmission daemon CLI"
 repository = "https://github.com/user827/trctl"
-version = "2.7.5"
+version = "2.7.6"
 authors = ["user827"]
 keywords = ["torrent", "transmission", "cli"]
 edition = "2021"
@@ -16,7 +16,7 @@ exclude = [
 
 [dependencies]
 faccess = { version = "0.2.3" }
-transmission-rpc = { version = "0.4.3" }
+transmission-rpc = { version = "0.5.0" }
 tokio = { version = "1.15" }
 clap = { version = "4", features = ["derive", "cargo"]}
 clap_complete = "4"
@@ -45,7 +45,7 @@ toml = "0.8.19"
 termcolor = "1.4.1"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["tracing-log", "env-filter"] }
-rusqlite = { version = "0.32.1" }
+rusqlite = { version = "0.34.0" }
 time = { version = "0.3.36", features = [ "formatting", "macros" ] }
 xdg = { version = "2.5.2", optional = true }
 

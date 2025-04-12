@@ -10,11 +10,11 @@ use std::fmt;
 use std::io::{stdin, BufWriter, Stderr, Stdin, Stdout, Write};
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
-use transmission_rpc::types::Torrent;
 use termcolor::{BufferedStandardStream, Color, ColorChoice, ColorSpec, WriteColor};
-use tracing::{span, event, Level};
-use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 use time::{macros::format_description, OffsetDateTime};
+use tracing::{event, span, Level};
+use tracing_subscriber::filter::{EnvFilter, LevelFilter};
+use transmission_rpc::types::Torrent;
 
 pub use imps::ReadLine;
 
@@ -72,7 +72,6 @@ fn strftime(time: u64) -> Result<String> {
     let format = format_description!("[year]-[month]-[day]");
     Ok(OffsetDateTime::from(d).format(&format)?)
 }
-
 
 pub mod imps {
     use std::io::{Result, Stdin};
@@ -236,9 +235,9 @@ impl NotifyView for Dbus {
         Notification::new()
             .summary("Duplicate, download again?")
             .body(&format!(
-                    "[{}]: {}",
-                    strftime(modified)?,
-                    &String::from_utf8_lossy(torrent),
+                "[{}]: {}",
+                strftime(modified)?,
+                &String::from_utf8_lossy(torrent),
             ))
             .id(Self::ID)
             .hint(Hint::Resident(true))
@@ -410,9 +409,7 @@ pub trait Logger {
         let filter = EnvFilter::builder()
             .with_default_directive(LevelFilter::INFO.into())
             .from_env_lossy();
-        tracing_subscriber::fmt()
-            .with_env_filter(filter)
-            .init();
+        tracing_subscriber::fmt().with_env_filter(filter).init();
     }
 
     fn add_indent(&mut self);
@@ -456,7 +453,7 @@ pub trait View {
     fn log(&mut self) -> &mut Self::Logger;
 }
 
-pub type DefCon = Console< BufferedStandardStream, Stdin>;
+pub type DefCon = Console<BufferedStandardStream, Stdin>;
 pub type DefLog = StdLog<BufferedStandardStream>;
 
 #[derive(Debug, Clone)]
@@ -477,13 +474,22 @@ impl<O: WriteColor> StdLog<O> {
 
     #[must_use]
     pub fn new<U: WriteColor>(out: U, err: U, level: log::LevelFilter) -> StdLog<U> {
-        StdLog { out, err, indent: 0, level }
+        StdLog {
+            out,
+            err,
+            indent: 0,
+            level,
+        }
     }
 
     #[must_use]
     pub fn from_choice(want: Option<bool>, verbosity: u8) -> StdLog<BufferedStandardStream> {
         let choice = if let Some(b) = want {
-            if b { ColorChoice::Always } else { ColorChoice::Never }
+            if b {
+                ColorChoice::Always
+            } else {
+                ColorChoice::Never
+            }
         } else {
             ColorChoice::Auto
         };
@@ -492,7 +498,11 @@ impl<O: WriteColor> StdLog<O> {
             1 => log::LevelFilter::Debug,
             _ => log::LevelFilter::Trace,
         };
-        Self::new(BufferedStandardStream::stdout(choice), BufferedStandardStream::stderr(choice), level)
+        Self::new(
+            BufferedStandardStream::stdout(choice),
+            BufferedStandardStream::stderr(choice),
+            level,
+        )
     }
 }
 
@@ -559,7 +569,9 @@ impl<O: WriteColor, I: ReadLine> View for Console<O, I> {
             Action::TorrentAction(TorrentAction::StartNow) => {
                 print_info!(&mut self.log, "Started immediately:")?;
             }
-            Action::TorrentAction(TorrentAction::Verify) => print_info!(&mut self.log, "Verifying:")?,
+            Action::TorrentAction(TorrentAction::Verify) => {
+                print_info!(&mut self.log, "Verifying:")?
+            }
             Action::TorrentAction(TorrentAction::Stop) => print_info!(&mut self.log, "Stopped:")?,
             Action::SetLocation { moved: false } => print_info!(&mut self.log, "Location set")?,
             Action::SetLocation { moved: true } => print_info!(&mut self.log, "Torrent moved")?,
@@ -633,7 +645,8 @@ impl<O: WriteColor> Logger for StdLog<O> {
         self.out.flush()?;
         match level {
             log::Level::Info => {
-                self.out.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                self.out
+                    .set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                 write!(self.out, "{:indent$}", "-- ", indent = self.indent)?;
                 self.out.reset()?;
                 writeln!(self.out, "{args}")?;
@@ -641,7 +654,8 @@ impl<O: WriteColor> Logger for StdLog<O> {
             }
             log::Level::Warn => {
                 write!(self.err, "{:indent$}", "[", indent = self.indent)?;
-                self.err.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                self.err
+                    .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 write!(self.err, "w")?;
                 self.err.reset()?;
                 writeln!(self.err, "] {args}")?;
@@ -649,7 +663,8 @@ impl<O: WriteColor> Logger for StdLog<O> {
             }
             log::Level::Error => {
                 write!(self.err, "{:indent$}", "[", indent = self.indent)?;
-                self.err.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                self.err
+                    .set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
                 write!(self.err, "e")?;
                 self.err.reset()?;
                 writeln!(self.err, "] {args}")?;
