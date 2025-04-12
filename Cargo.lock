@@ -3159,7 +3159,7 @@ dependencies = [
 
 [[package]]
 name = "trctl"
-version = "2.7.9"
+version = "2.7.10"
 dependencies = [
  "anyhow",
  "base32",
