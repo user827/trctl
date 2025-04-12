@@ -3,7 +3,7 @@ set -eu
 
 PATH=/usr/bin
 
-. /usr/lib/shlib/logs2.sh
+. /usr/lib/trctl/logging.sh
 
 errok=0
 
