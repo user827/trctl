@@ -196,17 +196,28 @@ pub struct Dbus {
     pub name: String,
     pub icon: String,
     pub v_ask_existing: bool,
+    app_name_override: String,
 }
 
 impl Dbus {
-    const ID: u32 = 32;
     #[must_use]
+    #[allow(clippy::missing_panics_doc)]
     pub fn new(name: String, v_ask_existing: bool) -> Self {
+        // BUG To avoid  https://gitlab.gnome.org/GNOME/libnotify/-/issues/41
+        let app_name = std::env::current_exe()
+            .unwrap()
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_owned();
+        let app_name_override = format!("{app_name}-notify");
         Self {
             // awesome wm needs absolute path or it looks the file in home dir first
             icon: format!("/usr/share/pixmaps/{name}.png"),
             name,
             v_ask_existing,
+            app_name_override,
         }
     }
 }
@@ -216,7 +227,7 @@ impl NotifyView for Dbus {
         let mut noti = Notification::new();
         noti.summary(&format!("{}: {}", self.name, summary))
             .urgency(urgency)
-            .id(Self::ID)
+            .appname(&self.app_name_override)
             .icon(&self.icon); // TODO
         if let Some(body) = body {
             noti.body(body);
@@ -233,13 +244,13 @@ impl NotifyView for Dbus {
         let mut ret = false;
 
         Notification::new()
+            .appname(&self.app_name_override)
             .summary("Duplicate, download again?")
             .body(&format!(
                 "[{}]: {}",
                 strftime(modified)?,
                 &String::from_utf8_lossy(torrent),
             ))
-            .id(Self::ID)
             .hint(Hint::Resident(true))
             .hint(Hint::ActionIcons(true))
             .action("yes", "yes")
