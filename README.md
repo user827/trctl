@@ -2,6 +2,10 @@
 [![AUR version](https://img.shields.io/aur/version/trctl)](https://aur.archlinux.org/packages/trctl/)
 [![Crate](https://img.shields.io/crates/v/trctl.svg)](https://crates.io/crates/trctl)
 
+<p align="center">
+<img src="res/notification.png">
+</p>
+
 A transmission daemon torrent client
 
 * Fast way to command common torrent actions such as querying/filtering, adding,
