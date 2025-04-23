@@ -177,6 +177,10 @@ impl NotifyView for Unprivileged {
         Ok(())
     }
 
+    fn ask_retry(&mut self, _err: &anyhow::Error) -> Result<bool> {
+        unimplemented!();
+    }
+
     fn ask_existing(&mut self, torrent: &[u8], modified: u64) -> Result<bool> {
         use native_dialog::{MessageDialog, MessageType};
         let msg = format!(
@@ -223,6 +227,29 @@ impl Dbus {
 }
 
 impl NotifyView for Dbus {
+    fn ask_retry(&mut self, err: &anyhow::Error) -> Result<bool> {
+        let mut ret = false;
+
+        Notification::new()
+            .summary("Failed, retry?")
+            .body(&format!("{err:#}"))
+            .hint(Hint::Resident(true))
+            .hint(Hint::ActionIcons(true))
+            .action("yes", "yes")
+            .action("no", "no")
+            .timeout(Timeout::Never)
+            .icon(&self.icon) // TODO
+            .show()
+            .context("notify failed")?
+            .wait_for_action(|action| match action {
+                "yes" => ret = true,
+                // "__closed"| "no" | ??
+                _ => ret = false,
+            });
+
+        Ok(ret)
+    }
+
     fn notify(&self, urgency: Urgency, summary: &str, body: Option<&str>) -> Result<()> {
         let mut noti = Notification::new();
         noti.summary(&format!("{}: {}", self.name, summary))
@@ -244,7 +271,6 @@ impl NotifyView for Dbus {
         let mut ret = false;
 
         Notification::new()
-            .appname(&self.app_name_override)
             .summary("Duplicate, download again?")
             .body(&format!(
                 "[{}]: {}",
@@ -272,6 +298,7 @@ impl NotifyView for Dbus {
 pub trait NotifyView {
     fn notify(&self, urgency: Urgency, summary: &str, body: Option<&str>) -> Result<()>;
     fn ask_existing(&mut self, name: &[u8], modified: u64) -> Result<bool>;
+    fn ask_retry(&mut self, err: &anyhow::Error) -> Result<bool>;
 }
 pub struct Notifier<NV: NotifyView> {
     notify_view: NV,
@@ -314,6 +341,10 @@ impl<NV: NotifyView> Notifier<NV> {
 
 impl<NV: NotifyView> View for Notifier<NV> {
     type Logger = Self;
+
+    fn ask_retry(&mut self, err: &anyhow::Error) -> Result<bool> {
+        self.notify_view.ask_retry(err)
+    }
 
     fn ask_existing(&mut self, torrent: &[u8], modified: u64) -> Result<bool> {
         self.notify_view.ask_existing(torrent, modified)
@@ -380,7 +411,7 @@ impl<NV: NotifyView> Logger for Notifier<NV> {
                 } else if let Some(msg) = err.downcast_ref::<Multiple>() {
                     print_warn!(self, "{}", msg).context("log")
                 } else {
-                    self.do_log(format_args!("{:#}", err), log::Level::Error, false)
+                    self.do_log(format_args!("{err:#}"), log::Level::Error, false)
                         .context("log")?;
                     self.notify_view
                         .notify(Urgency::Critical, "error", Some(&format!("{err:#}")))
@@ -451,6 +482,8 @@ pub trait Logger {
 // User interaction required
 pub trait View {
     type Logger: Logger;
+
+    fn ask_retry(&mut self, err: &anyhow::Error) -> Result<bool>;
 
     fn ask_existing(&mut self, name: &[u8], modified: u64) -> Result<bool>;
 
@@ -549,6 +582,10 @@ pub enum Action {
 }
 impl<O: WriteColor, I: ReadLine> View for Console<O, I> {
     type Logger = StdLog<O>;
+
+    fn ask_retry(&mut self, _err: &anyhow::Error) -> Result<bool> {
+        unimplemented!();
+    }
 
     fn ask_existing(&mut self, name: &[u8], modified: u64) -> Result<bool> {
         if !self.v_ask_existing {

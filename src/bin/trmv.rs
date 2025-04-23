@@ -2,7 +2,7 @@ use clap::Parser;
 use std::path::PathBuf;
 use trctl::client::SyncRequest;
 use trctl::config::{Builder, Config};
-use trctl::console::Logger;
+use trctl::console::{Logger,View as _};
 //use trctl::console::Unprivileged;
 use tracing::{event, span, Level};
 use trctl::errors::*;
@@ -54,25 +54,37 @@ fn run_logged(builder: Builder<SyncRequest>) -> Result<()> {
     let mut trmv = builder.new_trmv_view(log)?;
 
     use Command::*;
-    match cli.cmd {
-        Add {
-            dldir,
-            path,
-            existing,
-        } => trmv.add(&AddArgs {
-            location: &TorrentLoc::Path(path),
-            dldir: dldir.as_ref(),
-            use_existing: existing,
-        }),
-        AddUrl {
-            dldir,
-            url,
-            existing,
-        } => trmv.add(&AddArgs {
-            location: &TorrentLoc::Url(url),
-            dldir: dldir.as_ref(),
-            use_existing: existing,
-        }),
+    let mut count = 1;
+    loop {
+        let res = match cli.cmd {
+            Add {
+                ref dldir,
+                ref path,
+                existing,
+            } => trmv.add(&AddArgs {
+                location: &TorrentLoc::Path(path.clone()),
+                dldir: dldir.as_ref(),
+                use_existing: existing,
+            }),
+            AddUrl {
+                ref dldir,
+                ref url,
+                existing,
+            } => trmv.add(&AddArgs {
+                location: &TorrentLoc::Url(url.clone()),
+                dldir: dldir.as_ref(),
+                use_existing: existing,
+            }),
+        };
+        count += 1;
+        //println!("count: {count}");
+        if let Err(ref err) = res {
+            if let Some(NothingToDo(_)) = err.downcast_ref::<NothingToDo>() {
+            } else if count <= 3 && trmv.view.ask_retry(err)? {
+                continue
+            }
+        }
+        return res;
     }
 }
 
