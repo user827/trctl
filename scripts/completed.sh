@@ -61,6 +61,7 @@ for dst in "${destinations[@]}"; do
     err=0
     trctl --config "$cfgpath" --yes mv --hsh "$hsh" --destination "$dst" || err=$?
     if [ $err = 3 ]; then
+        log warn "Not enough space in $dst"
         continue
     fi
     exit $err
