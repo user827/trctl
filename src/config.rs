@@ -58,8 +58,6 @@ pub struct Config {
     pub force_not_remote: bool,
     pub base_dir: PathBuf,
     pub sqlitedb: bool,
-    pub destination_dirs: Vec<PathBuf>,
-    pub default_destination: PathBuf,
     pub verify: bool,
     pub dldirs: Vec<PathBuf>,
     pub ask_existing: bool,
@@ -87,13 +85,8 @@ impl Default for Config {
             force_not_remote: false,
             base_dir: PathBuf::from("/var/cache/torrents/"),
             verify: false,
-            default_destination: PathBuf::from("/var/cache/torrents/completed"),
             // TODO
             sqlitedb: true,
-            destination_dirs: ["/var/cache/torrents/completed"]
-                .into_iter()
-                .map(PathBuf::from)
-                .collect(),
             dldirs: ["/var/cache/torrents/dl"]
                 .iter()
                 .map(PathBuf::from)
@@ -182,8 +175,6 @@ impl Builder<MockRequest> {
             is_remote: false,
             client,
             verify: self.cfg.verify,
-            destination_dirs: self.cfg.destination_dirs,
-            default_destination: self.cfg.default_destination,
             console: Console {
                 v_ask_existing: true,
                 base_dir: self.cfg.base_dir,
@@ -276,8 +267,6 @@ impl<C: TorrentCli> Builder<C> {
             verify: self.cfg.verify,
             dldirs: self.cfg.dldirs,
             is_remote: Self::is_remote(&self.cfg.rpc_url, self.cfg.force_not_remote),
-            destination_dirs: self.cfg.destination_dirs,
-            default_destination: self.cfg.default_destination,
             dst_free_space_to_leave: self.cfg.dst_free_space_to_leave.as_u64(),
             console: Console {
                 v_ask_existing: self.cfg.ask_existing,

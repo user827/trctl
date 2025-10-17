@@ -93,7 +93,7 @@ pub enum CliSub {
         query_opts: QueryCmd,
         /// Destination directory
         #[arg(long, short)]
-        destination: Option<PathBuf>,
+        destination: PathBuf,
         /// Move even if the destination directory is low on disk space
         #[arg(long, short)]
         force: bool,

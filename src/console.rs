@@ -471,6 +471,8 @@ pub trait Logger {
             Err(err) => {
                 if let Some(NothingToDo(_)) = err.downcast_ref::<NothingToDo>() {
                     std::process::exit(0);
+                } else if err.downcast_ref::<NotEnoughSpace>().is_some() {
+                    std::process::exit(3);
                 } else {
                     std::process::exit(1);
                 }
@@ -750,6 +752,8 @@ impl<O: WriteColor> Logger for StdLog<O> {
             Err(err) => {
                 if let Some(NothingToDo(_)) = err.downcast_ref::<NothingToDo>() {
                     std::process::exit(0);
+                } else if let Some(_) = err.downcast_ref::<NotEnoughSpace>() {
+                    std::process::exit(3);
                 } else {
                     std::process::exit(1);
                 }

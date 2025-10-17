@@ -28,6 +28,15 @@ impl std::fmt::Display for Multiple {
 }
 
 #[derive(Debug)]
+pub struct NotEnoughSpace;
+impl std::error::Error for NotEnoughSpace {}
+impl std::fmt::Display for NotEnoughSpace {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Not enought space")
+    }
+}
+
+#[derive(Debug)]
 pub struct MagnetURIError(pub magnet_uri::Error);
 impl std::fmt::Display for MagnetURIError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {

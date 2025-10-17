@@ -87,7 +87,7 @@ freespace=$(df -B1 --output=avail -- "$destdir" | tail -1)
 if [ "$freespace" -le "$((size + freespacetoleave))" ] && [ "$force" != 1 ]; then
   log warn "not enough space in ${destdir#"$torrentroot"/} for ${basepath#"$torrentroot"/}"
   errok=1
-  exit 1
+  exit 3
 fi
 
 

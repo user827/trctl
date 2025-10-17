@@ -332,8 +332,6 @@ impl<C: TorrentCli, V: View> Trmv<C, V> {
 pub struct Trctl<T, C> {
     client: Client<T>,
     pub console: C,
-    destination_dirs: Vec<PathBuf>,
-    default_destination: PathBuf,
     dldirs: Vec<PathBuf>,
     verify: bool,
     pub interactive: bool,
@@ -601,7 +599,7 @@ impl<T: TorrentCli, O: WriteColor, I: ReadLine> Trctl<T, Console<O, I>> {
     pub fn mv(
         &mut self,
         qcmd: &QueryCmd,
-        destination: Option<&PathBuf>,
+        destination: &Path,
         force: bool,
         verify: Option<bool>,
         config_path: &Path,
@@ -610,14 +608,10 @@ impl<T: TorrentCli, O: WriteColor, I: ReadLine> Trctl<T, Console<O, I>> {
             bail!("Cannot mv files in a remote host");
         }
 
-        let destination = destination.unwrap_or(&self.default_destination);
-        if !self.destination_dirs.contains(destination) {
-            bail!("No such destination: '{}'", destination.display());
-        }
-
         let filtered: Vec<Torrent> = self.client.torrent_query_sort(None, qcmd)?;
         let selected = Self::selectids(&mut self.console, &filtered, None, self.interactive)?;
 
+        let mut last_error = None;
         let mut errors = 0;
         for i in selected {
             let tor = &filtered[i];
@@ -668,12 +662,16 @@ impl<T: TorrentCli, O: WriteColor, I: ReadLine> Trctl<T, Console<O, I>> {
             p.env("TR_TORRENT_DESTINATION", destination);
             let status = p.status()?;
             if !status.success() {
+                last_error = status.code();
                 errors += 1;
                 print_warn!(self.console.log(), "move: {:?}", status)?;
             }
         }
-        if errors > 0 {
+        if errors > 1 {
             bail!(Multiple(errors))
+        }
+        if let Some(3) = last_error {
+            bail!(NotEnoughSpace)
         }
         Ok(())
     }
