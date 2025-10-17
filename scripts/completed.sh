@@ -57,6 +57,7 @@ if [ "$logged" = 0 ]; then
 fi
 notify
 
+err=0
 for dst in "${destinations[@]}"; do
     err=0
     trctl --config "$cfgpath" --yes mv --hsh "$hsh" --destination "$dst" || err=$?
@@ -66,3 +67,4 @@ for dst in "${destinations[@]}"; do
     fi
     exit $err
 done
+exit $err
