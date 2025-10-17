@@ -1,7 +1,7 @@
 // from: https://fullstackmilk.dev/efficiently_escaping_strings_using_cow_in_rust/
 use std::borrow::Cow;
 
-pub fn zsh(input: &str) -> Cow<str> {
+pub fn zsh(input: &'_ str) -> Cow<'_, str> {
     // Iterate through the characters, checking if each one needs escaping
     for (i, ch) in input.chars().enumerate() {
         if zsh_escape_char(ch).is_some() {
