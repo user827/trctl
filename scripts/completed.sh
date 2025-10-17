@@ -4,16 +4,12 @@ set -eu
 PATH=/usr/bin
 cfgpath=/etc/trctl/completed.toml
 
+. /etc/trctl/completed.conf
+
 . /usr/lib/trctl/logging.sh
 
 name=$TR_TORRENT_NAME
 hsh=$TR_TORRENT_HASH
-
-fipath=$(sed -rn 's/default_destination = "(.+)"/\1/p' "$cfgpath")
-mailuser=$(sed -rn 's/mailuser = "(.+)"/\1/p' "$cfgpath")
-if [ "$mailuser" = none ]; then
-    mailuser=
-fi
 
 errok=0
 
@@ -26,7 +22,7 @@ checkstatus() {
 
 notify() {
   local subject msg
-  subject="Torrent completed =$fipath="
+  subject="Torrent completed"
   msg=$name
   if [ -z "${mailuser:-}" ]; then
     return 0
@@ -60,4 +56,12 @@ if [ "$logged" = 0 ]; then
   exec systemd-cat -p notice -t completed --level-prefix=yes sh "$0" "$@" --systemd --logged
 fi
 notify
-trctl --config "$cfgpath" --yes mv --hsh "$hsh"
+
+for dst in "${destinations[@]}"; do
+    err=0
+    trctl --config "$cfgpath" --yes mv --hsh "$hsh" --destination "$dst" || err=$?
+    if [ $err = 3 ]; then
+        continue
+    fi
+    exit $err
+done

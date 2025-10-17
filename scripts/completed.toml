@@ -1,12 +1,9 @@
-mailuser = "none"
 rpc_url = "http://127.0.0.1:9091/transmission/rpc"
 rpc_user = "none"
 rpc_pass = "none"
 force_not_remote = false
 base_dir = "/var/cache/torrents/"
 sqlitedb = true
-destination_dirs = ["/var/cache/torrents/completed"]
-default_destination = "/var/cache/torrents/completed"
 verify = false
 dldirs = ["/var/cache/torrents/dl"]
 ask_existing = true

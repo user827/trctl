@@ -16,6 +16,7 @@ options=(strip)
 
 backup=(
 "etc/$pkgname/completed.toml"
+"etc/$pkgname/completed.conf"
 )
 
 _release=release
@@ -62,6 +63,7 @@ package() {
   install -D -m755 scripts/move.sh "$pkgdir"/usr/lib/"$pkgname"/move.sh
   install -D -m755 scripts/completed.sh "$pkgdir"/usr/lib/"$pkgname"/completed.sh
   install -D -m644 scripts/completed.toml "$pkgdir"/etc/"$pkgname"/completed.toml
+  install -D -m644 scripts/completed.conf "$pkgdir"/etc/"$pkgname"/completed.conf
   mkdir -p "$pkgdir"/usr/share/zsh/site-functions/
   #target/release/trctl gen-completions zsh > "$pkgdir"/usr/share/zsh/site-functions/_trctl
   #chmod 644 "$pkgdir"/usr/share/zsh/site-functions/_trctl
